@@ -10,9 +10,11 @@ box::use(
     showModal,
     modalDialog,
     modalButton,
-    tagList
+    tagList,
+    div,
   ],
-  shiny.router[change_page]
+  shiny.router[change_page],
+  rintrojs[introjsUI, introjs, introBox],
 )
 
 #' @export
@@ -20,7 +22,7 @@ navbar_ui <- function(id) {
   ns <- NS(id)
   navbarPage(
     title = "TDCMApp",
-    id = ns("navbar"),
+    id = ns("navbar")
   )
 }
 
@@ -105,4 +107,74 @@ nb_server <- function(id, route) {
       change_page(route)
     })
   })
+}
+
+#' Progress bar UI Component
+#'
+#' @param id The id of the progress bar
+#' @param total_steps The total number of steps in the progress bar
+#' @return A shiny UI component
+#' @export
+progress_bar_ui <- function(id, total_steps = 5) {
+  ns <- NS(id)
+
+  div(
+    class = "progress",
+    style = "height: 20px; margin-bottom: 20px;",
+    div(
+      class = "progress-bar",
+      role = "progressbar",
+      "aria-valuenow" = "0",
+      "aria-valuemin" = "0",
+      "aria-valuemax" = total_steps,
+      style = "width: 0%;",
+      id = ns("progressBar")
+    )
+  )
+}
+
+#' Help Intro Box
+#'
+#' @param id Namespace ID
+#' @return Shiny UI elements for the help intro box
+#' @export
+help_intro_box <- function(id) {
+  ns <- NS(id)
+  
+    introBox(
+      actionButton(ns("startTour"), "Help", class = "btn-primary",
+      data.step = 1,
+      data.intro = "Click this button to start the tour.",
+      )
+    )
+}
+
+#' Tour UI Component
+#'
+#' @param id Namespace ID
+#' @return Shiny UI elements for the tour
+#' @export
+tour_ui <- function (id) {
+  ns <- NS(id)
+
+  tagList(
+    help_intro_box(id)
+  )
+}
+
+#' Factory function to create tour steps
+#'
+#' @param id Namespace ID
+#' @param ui_element The UI element to be displayed in the tour step
+#' @param step_number The step number of the tour
+#' @param intro_text The text to be displayed in the tour step
+#' @return A shiny UI element wrapped in introBox
+#' @export
+create_tour_step <- function(id, ui_element, step_number, intro_text) {
+  ns <- NS(id)
+  introBox(
+    ui_element,
+    data.step = step_number,
+    data.intro = intro_text
+  )
 }

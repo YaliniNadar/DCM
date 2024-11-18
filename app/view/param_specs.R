@@ -17,13 +17,15 @@ box::use(
     observe,
     reactive,
     div,
-    tags
+    tags,
+    tagList,
   ],
   shinyjs[useShinyjs, runjs],
   shinyStorePlus[initStore, setupStorage],
-  shinyvalidate[InputValidator, sv_required, sv_optional, ],
+  shinyvalidate[InputValidator, sv_required, sv_optional],
   stringr[str_detect, str_trim, str_replace_all],
   rintrojs[introjsUI, introjs, introBox],
+  app/view[ui_components],
 )
 
 box::use(
@@ -36,67 +38,71 @@ box::use(
 ui <- function(id) {
   ns <- NS(id)
 
+      
+  # Define a list of tour steps
+  tour_steps <- list(
+    list(
+      ui_element = numericInput(ns("num_time_points"), "Enter number of time points:", value = 1, min = 1),
+      step_number = 1,
+      intro_text = "Enter the total number of time points for your analysis."
+    ),
+    list(
+      ui_element = numericInput(ns("num_attributes"), "Enter number of attributes measured:", value = 1, min = 1),
+      step_number = 2,
+      intro_text = "Enter the total number of attributes measured in your data."
+    ),
+    list(
+      ui_element = textInput(ns("attribute_names"), "Enter attribute names separated by commas (optional):"),
+      step_number = 3,
+      intro_text = "Enter the names of the attributes measured in your data, separated by commas."
+    ),
+    list(
+      ui_element = radioButtons(ns("q_matrix_choice"), "Is there a different Q-Matrix for each time point?",
+        choices = c("Yes", "No"), selected = "No"
+      ),
+      step_number = 4,
+      intro_text = "Choose whether there is a different Q-Matrix for each time point in your data."
+    )
+  )
+
+  # Generate the UI using the factory function
+  tour_ui_elements <- lapply(tour_steps, function(step_info) {
+    ui_components$create_tour_step(
+      id = id,
+      ui_element = step_info$ui_element,
+      step_number = step_info$step_number,
+      intro_text = step_info$intro_text
+    )
+  })
+
   fluidPage(
     initStore(),
     useShinyjs(),
     introjsUI(),
 
-    # Trigger button for the tour
-    introBox(
-      actionButton(ns("startTour"), "Help", class = "btn-info"),
-      data.step = 5,
-      data.intro = "Click this button to start a guided tour of the application."
-    ),
+    ui_components$tour_ui(id),
+
+    ui_components$navbar_ui(id),
+
     h2("Parameter Specifications"),
     br(),
-    introBox(
-      tags$div(
-        style = "display: flex; flex-direction: row; justify-content: space-between;",
-        tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: #ffc400;"),
-        tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-        tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-        tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-        tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;")
-      ),
-      data.step = 5,
-      data.intro = "These are three short lines next to each other."
-    ),
-    br(),
-    # Input 1: Number of time points
-    introBox(
-      numericInput(ns("num_time_points"), "Enter number of time points: ", value = 1, min = 1),
-      data.step = 1,
-      data.intro = "Enter the total number of time points for your analysis."
-    ),
 
-    # Input 2: Number of attributes measured
-    introBox(
-      numericInput(ns("num_attributes"), "Enter number of attributes measured: ", value = 1, min = 1),
-      data.step = 2,
-      data.intro = "Enter the total number of attributes measured in your data."
-    ),
+    # TODO: Show Cotterell difference of new factory function ORIGINAL HERE
+    # # Input 2: Number of attributes measured
+    # introBox(
+    #   numericInput(ns("num_attributes"), "Enter number of attributes measured: ", value = 1, min = 1),
+    #   data.step = 2,
+    #   data.intro = "Enter the total number of attributes measured in your data."
+    # ),
 
-    # Input 3: Attribute names separated by commas
-    introBox(
-      textInput(ns("attribute_names"), "Enter attribute names separated by commas (optional): "),
-      data.step = 3,
-      data.intro = "Enter the names of the attributes measured in your data, separated by commas."
-    ),
-
-    # Input 4: Q-Matrix for each time point
-    introBox(
-      radioButtons(ns("q_matrix_choice"), "Is there a different Q-Matrix for each time point?",
-        choices = c("Yes", "No"), selected = "No"
-      ),
-      data.step = 4,
-      data.intro = "Choose whether there is a different Q-Matrix for each time point in your data."
-    ),
+    # Add the generated tour steps
+    tagList(tour_ui_elements),
+    
     uiOutput(ns("conditional_num_items")),
-    # Input 5: Glowing dashes
     div(
-      style = "display: flex; justify-content: flex-end;", # Aligns the buttons to the right
+      style = "display: flex; justify-content: flex-end;",
       ui_components$back_button(ns("backButton")),
-      uiOutput(ns("nextButtonUI")) # Placeholder for dynamic Next button rendering
+      uiOutput(ns("nextButtonUI"))
     ),
   )
 }
