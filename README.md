@@ -19,6 +19,8 @@
 
 To set up the necessary system dependencies, execute the `setup.sh` script provided in the root directory of the project. This script will update your package lists and install all required system packages.
 
+### Debian Setup
+
 1. **Clone the Repository:**
 
    ```bash
@@ -98,32 +100,36 @@ Ensure you have `renv` installed to manage R dependencies. Then, restore the pro
    renv::restore()
    ```
 
-3. **If Facing Problems run these in the R terminal to most likely resolve your dependancies.
+### Windows Setup
 
-    ```r
-    renv::status()
-    ```
-    
-    This command will show a list of any missing R packages needed to run the application
+To set up and run TDCMApp on Windows:
 
-    ```r
-    renv::snapshot()
-    ```
-    
-    When asked "What do you want to do?" select "2: Install the packages, then snapshot."
+1. **Install Required Software:**
+   - R from https://cran.rstudio.com/bin/windows/base
+   - Rtools44 from https://cran.rstudio.com/bin/windows/Rtools/rtools44/rtools.html 
+   - RStudio from https://posit.co/download/rstudio-desktop/
+   - Git from https://git-scm.com/downloads
 
-    When aksed "Do you want to proceed?" select "Y"
-    
-    ```r
-    renv::status()
-    ```
-    
-    It should now show “No issues found -- the project is in a consistent state.”
+2. **Clone and Setup Project:**
+   - Launch RStudio
+   - Go to File > New Project > Version Control > Git
+   - Repository URL: https://github.com/cotterell/tdcmapp
+   - Click "Create Project"
 
-    ```r
-    shiny::runApp()
-    ```
-    
+3. **Install Dependencies:**
+   ```r
+   # Check missing packages
+   renv::status()
+   
+   # Install packages and snapshot
+   renv::snapshot()
+   # Select "2: Install the packages, then snapshot" when prompted
+   # Select "Y" when asked to proceed
+   
+   # Verify installation
+   renv::status()
+   # Should show: "No issues found -- the project is in a consistent state."
+
 ## Useful Resources for Rhino R Package
 
 ### Links

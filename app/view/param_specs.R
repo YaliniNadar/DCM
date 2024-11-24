@@ -26,6 +26,7 @@ box::use(
   stringr[str_detect, str_trim, str_replace_all],
   rintrojs[introjsUI, introjs, introBox],
   app/view[ui_components],
+  app/logic[validation]
 )
 
 box::use(
@@ -82,22 +83,12 @@ ui <- function(id) {
 
     ui_components$tour_ui(id),
 
-    ui_components$navbar_ui(id),
-
     h2("Parameter Specifications"),
     br(),
 
-    # TODO: Show Cotterell difference of new factory function ORIGINAL HERE
-    # # Input 2: Number of attributes measured
-    # introBox(
-    #   numericInput(ns("num_attributes"), "Enter number of attributes measured: ", value = 1, min = 1),
-    #   data.step = 2,
-    #   data.intro = "Enter the total number of attributes measured in your data."
-    # ),
-
     # Add the generated tour steps
     tagList(tour_ui_elements),
-    
+
     uiOutput(ns("conditional_num_items")),
     div(
       style = "display: flex; justify-content: flex-end;",
@@ -289,44 +280,46 @@ server <- function(id, data) {
     }
 
     iv <- InputValidator$new()
+
+    # Basic numeric validations
     iv$add_rule("num_time_points", sv_required())
-    iv$add_rule("num_time_points", ~ if (!is.numeric(.)) "Input must be a number")
-    iv$add_rule("num_time_points", ~ if (. != round(.)) "Input must be an integer")
-    iv$add_rule("num_time_points", ~ if (. <= 0) "Input must be positive")
+    iv$add_rule("num_time_points", validation$pos_int_validation)
+
     iv$add_rule("num_attributes", sv_required())
-    iv$add_rule("num_attributes", ~ if (!is.numeric(.)) "Input must be a number")
-    iv$add_rule("num_attributes", ~ if (. != round(.)) "Input must be an integer")
-    iv$add_rule("num_attributes", ~ if (. <= 0) "Input must be positive")
-    iv$add_rule("attribute_names", sv_optional()) # check this
-    iv$add_rule("attribute_names", ~ if (any(grepl(" ", trimws(strsplit(., ",")[[1]])))) {
-      "Attribute names cannot contain whitespace"
-    })
-    iv$add_rule("attribute_names", num_of_att_validation)
-    iv$add_rule("q_matrix_choice", sv_required())
+    iv$add_rule("num_attributes", validation$pos_int_validation)
 
-    q_choice_yes <- InputValidator$new()
-    q_choice_yes$condition(~ input$q_matrix_choice == "No")
-    # validation$pos_int_input(ns("num_items_single_time_point"))
-    q_choice_yes$add_rule("num_items_single_time_point", sv_required())
-    q_choice_yes$add_rule("num_items_single_time_point", ~ if (!is.numeric(.)) "Input must be a number")
-    q_choice_yes$add_rule("num_items_single_time_point", ~ if (. != round(.)) "Input must be an integer")
-    q_choice_yes$add_rule("num_items_single_time_point", ~ if (. <= 0) "Input must be positive")
+    # Make attribute names optional with conditional validation
+    iv$add_rule("attribute_names", sv_optional())
 
-    q_choice_no <- InputValidator$new()
-    q_choice_no$condition(~ input$q_matrix_choice == "Yes")
-    q_choice_no$add_rule("num_items_each_time_point", sv_required())
-    q_choice_no$add_rule("num_items_each_time_point", ~ if (any(grepl("[^0-9,]", .))) {
-      "Input must be a comma-separated list of numbers"
+    # Only validate non-empty attribute names
+    attribute_names_validator <- InputValidator$new()
+    attribute_names_validator$condition(function() {
+      value <- input$attribute_names
+      !is.null(value) && nchar(trimws(value)) > 0
     })
-    q_choice_no$add_rule("num_items_each_time_point", num_item_each_time_point_validation)
-    q_choice_no$add_rule("num_items_each_time_point", ~ if (any(grepl(" ", trimws(strsplit(., ",")[[1]])))) {
-      "Attribute names cannot contain whitespace"
-    })
+    attribute_names_validator$add_rule("attribute_names",
+      ~ validation$validate_attribute_names(., input$num_attributes))
+    iv$add_validator(attribute_names_validator)
 
-    iv$add_validator(q_choice_yes)
-    iv$add_validator(q_choice_no)
+    # Q-Matrix validations
+    q_choice_single <- InputValidator$new()
+    q_choice_single$condition(function() input$q_matrix_choice == "No")
+    q_choice_single$add_rule("num_items_single_time_point", sv_required())
+    q_choice_single$add_rule("num_items_single_time_point", validation$pos_int_validation)
+
+    q_choice_multiple <- InputValidator$new()
+    q_choice_multiple$condition(function() input$q_matrix_choice == "Yes")
+    q_choice_multiple$add_rule("num_items_each_time_point", sv_required())
+    q_choice_multiple$add_rule("num_items_each_time_point", validation$comma_sep_numbers_validation)
+    q_choice_multiple$add_rule("num_items_each_time_point", validation$no_whitespace_validation)
+    q_choice_multiple$add_rule("num_items_each_time_point",
+      ~ validation$validate_items_per_timepoint(., input$num_time_points))
+
+    iv$add_validator(q_choice_single)
+    iv$add_validator(q_choice_multiple)
 
     iv$enable()
+
     ui_components$nb_server("nextButton", "q_matrix")
   })
 }

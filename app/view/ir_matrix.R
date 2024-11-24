@@ -138,26 +138,27 @@ server <- function(id, data) {
         }
 
         observeEvent(input$fileIR, {
-          # Read IR matrix columns
+          # Get current values
           num_cols_in_ir_matrix <- ncol(data_temp)
-          # Code to read Q rows and time points
           num_rows_in_q_matrix <- data$num_rows_in_q_matrix
-          num_time_points <- data$numTimePoints # check
+          num_time_points <- data$numTimePoints
 
           error_message <- NULL
 
-          num_cols_in_ir_matrix <- ncol(data_temp)
-          print(paste("num_cols_in_ir_matrix: ", num_cols_in_ir_matrix))
-
-          num_rows_in_q_matrix <- data$num_rows_in_q_matrix
-          print(paste("num_rows_in_q_matrix: ", num_rows_in_q_matrix))
-
-          num_time_points <- data$numTimePoints
-          print(paste("num_time_points: ", num_time_points))
-
-          if (!is.null(num_cols_in_ir_matrix) && !is.null(num_rows_in_q_matrix) && !is.null(num_time_points) && num_rows_in_q_matrix * num_time_points != num_cols_in_ir_matrix) {
-            error_message <- paste("The number of IR columns does not equal the number of rows in the
-            Q matrix multiplied by time points.", sep = "")
+          # Calculate expected time points if possible
+          if (!is.null(num_cols_in_ir_matrix) && !is.null(num_rows_in_q_matrix)) {
+            expected_time_points <- num_cols_in_ir_matrix / num_rows_in_q_matrix
+            
+            if (!is.null(num_time_points) && num_rows_in_q_matrix * num_time_points != num_cols_in_ir_matrix) {
+              error_message <- paste(
+                "The number of columns in the IR matrix (", num_cols_in_ir_matrix,
+                ") does not match the number of rows in the Q matrix (", num_rows_in_q_matrix,
+                ") multiplied by the number of time points (", num_time_points, ").",
+                " The number of time points should be ", expected_time_points,
+                " based on the IR matrix columns.",
+                sep = ""
+              )
+            }
           }
 
           if (!is.null(error_message)) {
@@ -174,15 +175,10 @@ server <- function(id, data) {
               )
             })
           } else {
-            # Clear the error box if there are no errors
-            output$errorBox <- renderUI({
-              NULL
-            })
-
+            output$errorBox <- renderUI(NULL)
             output$nextButtonUI <- renderUI({
               actionButton(session$ns("nextButton"), "Next", class = "btn-primary")
             })
-            # Proceed with saving the IR matrix data to the application's state if the numbers match
             data$ir_matrix <<- data_temp
           }
         })
