@@ -24,7 +24,7 @@ To set up the necessary system dependencies, execute the `setup.sh` script provi
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/YaliniNadar/RhinoDCM1.0
+   git clone https://github.com/cotterell/tdcmapp.git
    cd RhinoDCM1.0
    ```
 
