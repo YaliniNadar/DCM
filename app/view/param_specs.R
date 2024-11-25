@@ -1,64 +1,92 @@
 box::use(
+  # Core Shiny imports
   shiny[
-    moduleServer,
-    NS,
+    # UI elements
+    actionButton,
+    br,
+    div,
     fluidPage,
     h2,
-    p,
-    br,
     HTML,
     numericInput,
-    textInput,
+    p,
     radioButtons,
-    actionButton,
-    observeEvent,
-    uiOutput,
-    renderUI,
-    observe,
-    reactive,
-    div,
-    tags,
     tagList,
-  ],
-  shinyjs[useShinyjs, runjs],
-  shinyStorePlus[initStore, setupStorage],
-  shinyvalidate[InputValidator, sv_required, sv_optional],
-  stringr[str_detect, str_trim, str_replace_all],
-  rintrojs[introjsUI, introjs, introBox],
-  app/view[ui_components],
-  app/logic[validation]
-)
+    tags,
+    textInput,
 
-box::use(
-  app/view[ui_components],
-  app/logic[storage],
-  app/logic[validation],
+    # Server functionality
+    moduleServer,
+    NS,
+    observe,
+    observeEvent,
+    reactive,
+    renderUI,
+    uiOutput,
+  ],
+
+  # Additional packages
+  rintrojs[
+    introBox,
+    introjs,
+    introjsUI
+  ],
+  shinyjs[
+    runjs,
+    useShinyjs
+  ],
+  shinyStorePlus[
+    initStore,
+    setupStorage
+  ],
+  shinyvalidate[
+    InputValidator,
+    sv_optional,
+    sv_required
+  ],
+  stringr[
+    str_detect,
+    str_replace_all,
+    str_trim
+  ],
+
+  # Custom modules
+  app/logic[
+    storage,
+    validation
+  ],
+  app/view[
+    ui_components
+  ],
 )
 
 #' @export
 ui <- function(id) {
   ns <- NS(id)
 
-      
   # Define a list of tour steps
   tour_steps <- list(
     list(
-      ui_element = numericInput(ns("num_time_points"), "Enter number of time points:", value = 1, min = 1),
+      ui_element = numericInput(ns("num_time_points"),
+                                "Enter number of time points:", value = 1, min = 1),
       step_number = 1,
       intro_text = "Enter the total number of time points for your analysis."
     ),
     list(
-      ui_element = numericInput(ns("num_attributes"), "Enter number of attributes measured:", value = 1, min = 1),
+      ui_element = numericInput(ns("num_attributes"),
+                                "Enter number of attributes measured:", value = 1, min = 1),
       step_number = 2,
       intro_text = "Enter the total number of attributes measured in your data."
     ),
     list(
-      ui_element = textInput(ns("attribute_names"), "Enter attribute names separated by commas (optional):"),
+      ui_element = textInput(ns("attribute_names"),
+                             "Enter attribute names separated by commas (optional):"),
       step_number = 3,
       intro_text = "Enter the names of the attributes measured in your data, separated by commas."
     ),
     list(
-      ui_element = radioButtons(ns("q_matrix_choice"), "Is there a different Q-Matrix for each time point?",
+      ui_element = radioButtons(ns("q_matrix_choice"),
+        "Is there a different Q-Matrix for each time point?",
         choices = c("Yes", "No"), selected = "No"
       ),
       step_number = 4,
@@ -183,7 +211,7 @@ server <- function(id, data) {
       } else {
         # Check if input$num_items_each_time_point is not empty
         if (!is.null(input$num_items_each_time_point) &&
-          nchar(input$num_items_each_time_point) > 0) {
+              nchar(input$num_items_each_time_point) > 0) {
           # Split the comma-separated values for each time point
           num_items_each_time_point <- as.numeric(unlist(strsplit(input$num_items_each_time_point, ","))) # nolint: line_length_linter.
           data$param_specs_data$num_items <- num_items_each_time_point
@@ -262,20 +290,25 @@ server <- function(id, data) {
       } else if (num_attributes != input$num_attributes) {
         print(paste("Mismatch: Expected", input$num_attributes, "found", num_attributes))
         if (num_attributes < input$num_attributes) {
-          return(paste("Expected", input$num_attributes, "attribute names but only found", num_attributes))
+          return(paste("Expected", input$num_attributes,
+                       "attribute names but only found", num_attributes))
         } else {
-          return(paste("Expected", input$num_attributes, "attribute names but found", num_attributes))
+          return(paste("Expected", input$num_attributes,
+                       "attribute names but found", num_attributes))
         }
       }
     }
 
     num_item_each_time_point_validation <- function(value) {
       num_items_each_time_point <- as.numeric(unlist(strsplit(value, ",")))
-      print(paste("Validating number of items for each time point:", toString(num_items_each_time_point)))
+      print(paste("Validating number of items for each time point:",
+                  toString(num_items_each_time_point)))
 
       if (length(num_items_each_time_point) != input$num_time_points) {
-        print(paste("Mismatch: Expected", input$num_time_points, "found", length(num_items_each_time_point)))
-        return(paste("Expected", input$num_time_points, "numbers of items but found", length(num_items_each_time_point)))
+        print(paste("Mismatch: Expected", input$num_time_points,
+                    "found", length(num_items_each_time_point)))
+        return(paste("Expected", input$num_time_points,
+                     "numbers of items but found", length(num_items_each_time_point)))
       }
     }
 
@@ -298,7 +331,7 @@ server <- function(id, data) {
       !is.null(value) && nchar(trimws(value)) > 0
     })
     attribute_names_validator$add_rule("attribute_names",
-      ~ validation$validate_attribute_names(., input$num_attributes))
+        ~ validation$validate_attribute_names(., input$num_attributes))
     iv$add_validator(attribute_names_validator)
 
     # Q-Matrix validations

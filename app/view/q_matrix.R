@@ -1,32 +1,45 @@
 box::use(
+  # Core Shiny imports
   shiny[
-    NS,
-    fluidPage,
+    actionButton,
     br,
-    h2,
-    tags,
-    fileInput,
-    radioButtons,
-    textInput,
     checkboxInput,
+    div,
+    fileInput,
+    fluidPage,
+    h2,
+    HTML,
     moduleServer,
+    NS,
     observe,
     observeEvent,
+    radioButtons,
     renderUI,
-    uiOutput,
-    actionButton,
-    div,
     tagList,
-    HTML,
+    tags,
+    textInput,
+    uiOutput
   ],
-  shinyjs[runjs],
-  DT[DTOutput, renderDT, datatable, JS],
-  data.table[fread],
-)
 
-box::use(
-  app / view[ui_components, table_helper],
-  app / logic[storage],
+  # Additional packages
+  DT[
+    datatable,
+    DTOutput,
+    JS,
+    renderDT
+  ],
+  data.table[fread],
+  shinyjs[useShinyjs],
+
+  # Custom modules
+  app/logic[
+    storage,
+    validation
+  ],
+  app/view[
+    table_helper,
+    ui_components
+  ]
 )
 
 #' @export
@@ -139,56 +152,23 @@ server <- function(id, data) {
           data_temp <- data_temp[, -id_columns, with = FALSE]
         }
 
+        # Validate the dimensions of the Q matrix
         observeEvent(input$fileQ, {
-          # Code to read and process the Q matrix file
           num_cols_in_q_matrix <- ncol(data_temp)
           num_rows_in_q_matrix <- nrow(data_temp)
-          # Use data$numAttributes, which should be set by param_specs.R
           num_attributes <- data$numAttributes
           num_items_for_single_time <- data$numTimeSinglePoint
           data$num_rows_in_q_matrix <- nrow(data_temp)
 
-          error_message <- NULL
+          error_message <- validation$validate_matrix_dimensions(
+            num_rows_in_q_matrix,
+            num_cols_in_q_matrix,
+            num_items_for_single_time,
+            num_attributes
+          )
 
-          if (!is.null(num_items_for_single_time) && num_rows_in_q_matrix !=
-            num_items_for_single_time) {
-            error_message <- paste("The number of rows in the Q matrix (", num_rows_in_q_matrix,
-              ") does not match the number of items (",
-              num_items_for_single_time, "). Please ensure they are equal.",
-              sep = ""
-            )
-          } else if (!is.null(num_attributes) && num_cols_in_q_matrix != num_attributes) {
-            error_message <- paste("The number of attributes (", num_attributes,
-              ") does not match the number of columns (",
-              num_cols_in_q_matrix, ") in the Q matrix.
-                                   Please ensure they are equal.",
-              sep = ""
-            )
-          }
-
-          if (!is.null(error_message)) {
-            output$errorBox <- renderUI({
-              div(
-                class = "alert alert-danger", role = "alert",
-                shiny::tags$strong("Error: "), error_message
-              )
-            })
-            output$nextButtonUI <- renderUI({
-              actionButton(session$ns("nextButton"), "Next",
-                class = "btn-primary disabled",
-                disabled = TRUE
-              )
-            })
-          } else {
-            # Clear the error box if there are no errors
-            output$errorBox <- renderUI({
-              NULL
-            })
-
-            output$nextButtonUI <- renderUI({
-              actionButton(session$ns("nextButton"), "Next", class = "btn-primary")
-            })
-            # Proceed with saving the Q matrix data to the application's state if the numbers match
+          is_valid <- validation$render_validation_ui(output, session, error_message)
+          if (is_valid) {
             data$q_matrix <<- data_temp
           }
         })

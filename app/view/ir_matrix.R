@@ -22,6 +22,7 @@ box::use(
   ],
   DT[DTOutput, renderDT, datatable, JS],
   data.table[fread],
+  app/logic[storage, validation]
 )
 
 box::use(
@@ -137,48 +138,20 @@ server <- function(id, data) {
           data_temp <- data_temp[, -id_columns, with = FALSE]
         }
 
+        # Validate IR matrix dimensions
         observeEvent(input$fileIR, {
-          # Get current values
           num_cols_in_ir_matrix <- ncol(data_temp)
           num_rows_in_q_matrix <- data$num_rows_in_q_matrix
           num_time_points <- data$numTimePoints
 
-          error_message <- NULL
+          validation_result <- validation$validate_ir_matrix_dimensions(
+            num_cols_in_ir_matrix,
+            num_rows_in_q_matrix,
+            num_time_points
+          )
 
-          # Calculate expected time points if possible
-          if (!is.null(num_cols_in_ir_matrix) && !is.null(num_rows_in_q_matrix)) {
-            expected_time_points <- num_cols_in_ir_matrix / num_rows_in_q_matrix
-            
-            if (!is.null(num_time_points) && num_rows_in_q_matrix * num_time_points != num_cols_in_ir_matrix) {
-              error_message <- paste(
-                "The number of columns in the IR matrix (", num_cols_in_ir_matrix,
-                ") does not match the number of rows in the Q matrix (", num_rows_in_q_matrix,
-                ") multiplied by the number of time points (", num_time_points, ").",
-                " The number of time points should be ", expected_time_points,
-                " based on the IR matrix columns.",
-                sep = ""
-              )
-            }
-          }
-
-          if (!is.null(error_message)) {
-            output$errorBox <- renderUI({
-              div(
-                class = "alert alert-danger", role = "alert",
-                shiny::tags$strong("Error: "), error_message
-              )
-            })
-            output$nextButtonUI <- renderUI({
-              actionButton(session$ns("nextButton"), "Next",
-                class = "btn-primary disabled",
-                disabled = TRUE
-              )
-            })
-          } else {
-            output$errorBox <- renderUI(NULL)
-            output$nextButtonUI <- renderUI({
-              actionButton(session$ns("nextButton"), "Next", class = "btn-primary")
-            })
+          is_valid <- validation$render_validation_ui(output, session, validation_result$error)
+          if (is_valid) {
             data$ir_matrix <<- data_temp
           }
         })
