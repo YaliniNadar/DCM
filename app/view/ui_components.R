@@ -141,13 +141,13 @@ progress_bar_ui <- function(id, total_steps = 5) {
 #' @export
 help_intro_box <- function(id) {
   ns <- NS(id)
-  
-    introBox(
-      actionButton(ns("startTour"), "Help", class = "btn-primary",
+
+  introBox(
+    actionButton(ns("startTour"), "Help", class = "btn-primary",
       data.step = 1,
       data.intro = "Click this button to start the tour.",
-      )
     )
+  )
 }
 
 #' Tour UI Component
@@ -155,7 +155,7 @@ help_intro_box <- function(id) {
 #' @param id Namespace ID
 #' @return Shiny UI elements for the tour
 #' @export
-tour_ui <- function (id) {
+tour_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
@@ -186,18 +186,18 @@ create_tour_step <- function(id, ui_element, step_number, intro_text) {
 #' @param current_step Current step number
 #' @param highlight_color Color for completed steps
 #' @export
-page_progress_bar <- function(id, total_steps = 5, current_step = 1, 
-                            highlight_color = "#ffc400") {
+page_progress_bar <- function(id, total_steps = 5, current_step = 1,
+                              highlight_color = "#ffc400") {
   ns <- NS(id)
-  
+
   # Input validation
   current_step <- min(max(1, current_step), total_steps)
-  
+
   # Create list of dash divs
   dashes <- lapply(1:total_steps, function(step) {
     tags$div(
       style = sprintf(
-        "height: 10px; 
+        "height: 10px;
          margin-bottom: 10px;
          flex: 1;
          background-color: %s;",
@@ -205,7 +205,7 @@ page_progress_bar <- function(id, total_steps = 5, current_step = 1,
       )
     )
   })
-  
+
   # Wrap in container div with gap
   tags$div(
     style = paste(
