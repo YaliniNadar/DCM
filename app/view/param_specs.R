@@ -33,6 +33,12 @@ box::use(
   app/view[ui_components],
 )
 
+#' Parameter Specifications UI
+#'
+#' @description Creates the user interface for parameter specifications
+#'
+#' @param id The module ID
+#' @return A shiny UI definition
 #' @export
 ui <- function(id) {
   ns <- NS(id)
@@ -101,6 +107,13 @@ ui <- function(id) {
   )
 }
 
+#' Parameter Specifications Server
+#'
+#' @description Server logic for parameter specifications module
+#'
+#' @param id The module ID
+#' @param data Reactive values object for storing parameter data
+#' @return None
 #' @export
 server <- function(id, data) {
   moduleServer(id, function(input, output, session) {

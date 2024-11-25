@@ -60,23 +60,10 @@ ui <- function(id) {
   ns <- NS(id)
   fluidPage(
     h2("Primary Aggregate Results"),
-    tagList(
-      tabsetPanel(
-        id = ns("output_tabs"),
-        tabPanel(a("Primary Aggregate Results", href = route_link("primary_aggregate_results"))),
-        tabPanel(a("Primary Individual Results", href = route_link("primary_individual_results"))),
-        tabPanel(a("Secondary Results", href = route_link("secondary_results")))
-      )
-    ),
-    router_ui(
-      route(
-        "primary_individual_results",
-        primary_individual_results$ui(ns("primary_individual_results"))
-      ),
-      route(
-        "secondary_results",
-        secondary_results$ui(ns("secondary_results"))
-      )
+
+    ui_components$results_navigation(
+      id = id,
+      current_tab = "primary_aggregate_results"
     ),
     br(),
     uiOutput(ns("dynamic_content")),

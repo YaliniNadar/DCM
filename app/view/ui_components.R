@@ -12,9 +12,10 @@ box::use(
     modalButton,
     tagList,
     div,
-    tags
+    tags,
+    icon
   ],
-  shiny.router[change_page],
+  shiny.router[change_page, route_link],
   rintrojs[introjsUI, introjs, introBox],
 )
 
@@ -216,5 +217,68 @@ page_progress_bar <- function(id, total_steps = 5, current_step = 1,
       "width: 100%;"
     ),
     dashes
+  )
+}
+
+# In ui_components.R, add new component:
+
+#' Results Navigation Component
+#' @param id Module ID
+#' @param current_tab Current active tab name
+#' @return Navigation UI element
+#' @export
+results_navigation <- function(id, current_tab) {
+  ns <- NS(id)
+
+  nav_items <- list(
+    list(
+      title = "Aggregate Results",
+      route = "primary_aggregate_results",
+      icon = "chart-bar"
+    ),
+    list(
+      title = "Individual Results",
+      route = "primary_individual_results",
+      icon = "users"
+    ),
+    list(
+      title = "Secondary Results",
+      route = "secondary_results",
+      icon = "chart-pie"
+    )
+  )
+
+  div(
+    class = "results-nav",
+    style = "margin-bottom: 2rem; border-bottom: 1px solid #dee2e6;",
+
+    div(
+      class = "nav nav-tabs",
+      style = "display: flex; gap: 1rem; padding: 0.5rem 1rem;",
+
+      lapply(nav_items, function(item) {
+        is_active <- item$route == current_tab
+
+        tags$a(
+          href = route_link(item$route),
+          class = sprintf(
+            "nav-item nav-link %s",
+            if (is_active) "active" else ""
+          ),
+          style = paste(
+            "display: flex;",
+            "align-items: center;",
+            "gap: 0.5rem;",
+            "padding: 0.75rem 1.25rem;",
+            "color:", if (is_active) "#007bff" else "#6c757d",
+            "border-bottom:", if (is_active) "2px solid #007bff" else "none",
+            "text-decoration: none;"
+          ),
+
+          icon(item$icon),
+          item$title
+        )
+      })
+    )
   )
 }

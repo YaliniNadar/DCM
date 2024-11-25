@@ -63,13 +63,9 @@ ui <- function(id) {
   ns <- NS(id)
   fluidPage(
     h2("Primary Individual Results"),
-    tagList(
-      tabsetPanel(
-        id = ns("output_tabs"),
-        tabPanel(a("Primary Aggregate Results", href = route_link("primary_aggregate_results"))),
-        tabPanel(a("Primary Individual Results", href = route_link("primary_individual_results"))),
-        tabPanel(a("Secondary Results", href = route_link("secondary_results")))
-      )
+    ui_components$results_navigation(
+      id = id,
+      current_tab = "primary_aggregate_results"
     ),
     br(),
     DTOutput(ns("classification_output")),
