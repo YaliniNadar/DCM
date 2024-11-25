@@ -48,17 +48,8 @@ ui <- function(id) {
 
   fluidPage(
     h2("Upload Q-Matrix File"),
-    br(),
-    tags$div(
-      style = "display: flex; flex-direction: row; justify-content: space-between;",
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: #ffc400;"),
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-    ),
-    br(),
 
+    ui_components$page_progress_bar(id, total_steps = 5, current_step = 2),
 
     # Input: Upload Q-Matrix file
     fileInput(ns("fileQ"), "Choose Q-Matrix File"),

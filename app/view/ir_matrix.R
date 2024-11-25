@@ -36,16 +36,8 @@ ui <- function(id) {
 
   fluidPage(
     h2("Upload IR-Matrix File"),
-    br(),
-    tags$div(
-      style = "display: flex; flex-direction: row; justify-content: space-between;",
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: #ffc400;"),
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-      tags$div(style = "height: 10px; margin-bottom: 10px; width: 160px; background-color: white;"),
-    ),
-    br(),
+
+    ui_components$page_progress_bar(id, total_steps = 5, current_step = 1),
 
     # Input: Upload IR-Matrix file
     fileInput(ns("fileIR"), "Choose IR-Matrix File"),

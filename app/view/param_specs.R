@@ -1,7 +1,6 @@
 box::use(
   # Core Shiny imports
   shiny[
-    # UI elements
     actionButton,
     br,
     div,
@@ -14,8 +13,6 @@ box::use(
     tagList,
     tags,
     textInput,
-
-    # Server functionality
     moduleServer,
     NS,
     observe,
@@ -26,38 +23,14 @@ box::use(
   ],
 
   # Additional packages
-  rintrojs[
-    introBox,
-    introjs,
-    introjsUI
-  ],
-  shinyjs[
-    runjs,
-    useShinyjs
-  ],
-  shinyStorePlus[
-    initStore,
-    setupStorage
-  ],
-  shinyvalidate[
-    InputValidator,
-    sv_optional,
-    sv_required
-  ],
-  stringr[
-    str_detect,
-    str_replace_all,
-    str_trim
-  ],
+  rintrojs[introBox, introjs, introjsUI],
+  shinyjs[useShinyjs],
+  shinyStorePlus[initStore],
+  shinyvalidate[InputValidator, sv_optional, sv_required],
 
   # Custom modules
-  app/logic[
-    storage,
-    validation
-  ],
-  app/view[
-    ui_components
-  ],
+  app/logic[storage, validation],
+  app/view[ui_components],
 )
 
 #' @export
@@ -108,6 +81,8 @@ ui <- function(id) {
     initStore(),
     useShinyjs(),
     introjsUI(),
+
+    ui_components$page_progress_bar(id, total_steps = 5, current_step = 1),
 
     ui_components$tour_ui(id),
 

@@ -12,6 +12,7 @@ box::use(
     modalButton,
     tagList,
     div,
+    tags
   ],
   shiny.router[change_page],
   rintrojs[introjsUI, introjs, introBox],
@@ -176,5 +177,44 @@ create_tour_step <- function(id, ui_element, step_number, intro_text) {
     ui_element,
     data.step = step_number,
     data.intro = intro_text
+  )
+}
+
+#' Create a page progress bar
+#' @param id Module ID
+#' @param total_steps Total number of steps
+#' @param current_step Current step number
+#' @param highlight_color Color for completed steps
+#' @export
+page_progress_bar <- function(id, total_steps = 5, current_step = 1, 
+                            highlight_color = "#ffc400") {
+  ns <- NS(id)
+  
+  # Input validation
+  current_step <- min(max(1, current_step), total_steps)
+  
+  # Create list of dash divs
+  dashes <- lapply(1:total_steps, function(step) {
+    tags$div(
+      style = sprintf(
+        "height: 10px; 
+         margin-bottom: 10px;
+         flex: 1;
+         background-color: %s;",
+        if (step <= current_step) highlight_color else "white"
+      )
+    )
+  })
+  
+  # Wrap in container div with gap
+  tags$div(
+    style = paste(
+      "display: flex;",
+      "flex-direction: row;",
+      "gap: 20px;",
+      "margin: 10px 0;",
+      "width: 100%;"
+    ),
+    dashes
   )
 }
