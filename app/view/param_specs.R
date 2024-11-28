@@ -88,11 +88,12 @@ ui <- function(id) {
     useShinyjs(),
     introjsUI(),
 
+    h2("Parameter Specifications"),
+
     ui_components$page_progress_bar(id, total_steps = 5, current_step = 1),
 
     ui_components$tour_ui(id),
-
-    h2("Parameter Specifications"),
+    
     br(),
 
     # Add the generated tour steps
