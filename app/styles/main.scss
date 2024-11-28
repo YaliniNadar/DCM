@@ -393,3 +393,24 @@ fieldset[disabled] .btn {
     transition: none;
     transform: none;
 }
+
+.progress-bar-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 10px 0;
+    width: 100%;
+}
+
+.page {
+    height: 10px;
+    margin-bottom: 10px;
+    width: 160px;
+    flex: 1;
+    background-color: white;
+}
+
+.current-page {
+    background-color: #ffc400;
+}

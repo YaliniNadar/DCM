@@ -185,42 +185,21 @@ create_tour_step <- function(id, ui_element, step_number, intro_text) {
 #' @param id Module ID
 #' @param total_steps Total number of steps
 #' @param current_step Current step number
-#' @param highlight_color Color for completed steps
 #' @export
-page_progress_bar <- function(id, total_steps = 5, current_step = 1,
-                              highlight_color = "#ffc400") {
+page_progress_bar <- function(id, total_steps, current_step) {
   ns <- NS(id)
 
   # Input validation
   current_step <- min(max(1, current_step), total_steps)
 
-  # Create list of dash divs
-  dashes <- lapply(1:total_steps, function(step) {
-    tags$div(
-      style = sprintf(
-        "height: 10px;
-         margin-bottom: 10px;
-         flex: 1;
-         background-color: %s;",
-        if (step <= current_step) highlight_color else "white"
+  # Create progess bar
+  tags$div(class = "progress-bar-container", 
+    lapply(1:total_steps, function(step) {
+      tags$div(class = ifelse(step == current_step, "page current-page", "page")
       )
-    )
-  })
-
-  # Wrap in container div with gap
-  tags$div(
-    style = paste(
-      "display: flex;",
-      "flex-direction: row;",
-      "gap: 20px;",
-      "margin: 10px 0;",
-      "width: 100%;"
-    ),
-    dashes
+    })
   )
 }
-
-# In ui_components.R, add new component:
 
 #' Results Navigation Component
 #' @param id Module ID
