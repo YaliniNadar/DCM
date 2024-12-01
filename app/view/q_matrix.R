@@ -15,10 +15,12 @@ box::use(
     observeEvent,
     radioButtons,
     renderUI,
+    req,
     tagList,
     tags,
     textInput,
-    uiOutput
+    uiOutput,
+    updateCheckboxInput
   ],
 
   # Additional packages
@@ -34,7 +36,8 @@ box::use(
   # Custom modules
   app/logic[
     storage,
-    validation
+    validation,
+    matrix_utils
   ],
   app/view[
     table_helper,
@@ -56,8 +59,8 @@ ui <- function(id) {
 
     # Input: Separator type
     radioButtons(ns("separatorType"), "Separator Type:",
-      choices = c("Tab" = "\t", "Comma" = ",", "Space" = " ", "Custom" = ""),
-      selected = ","
+      choices = c("Try to Guess" = "__NULL__", "Tab" = "\t", "Comma" = ",", "Space" = " ", "Custom" = ""),
+      selected = "__NULL__"
     ),
 
     # Conditional Separator
@@ -115,73 +118,41 @@ server <- function(id, data) {
       shiny.router::change_page("ir_matrix")
     })
 
-    observe({
-      # Read the uploaded file
-      file <- input$fileQ
-      if (!is.null(file$datapath)) {
-        separator <- input$separatorType
-        if (separator == "") {
-          data_temp <- fread(file$datapath,
-            sep = input$customSeparator,
-            header = input$excludeHeaders,
-            check.names = FALSE,
-            quote = "",
-          )
-        } else {
-          data_temp <- fread(file$datapath,
-            sep = input$separatorType,
-            header = input$excludeHeaders,
-            quote = "",
-          )
-        }
+    observeEvent(list(input$fileQ, input$excludeHeaders, input$separatorType), {
+      separator <- if (input$separatorType == "") input$customSeparator else input$separatorType
 
-        # Exclude ID columns if specified
-        if (input$excludeIdColumns) {
-          # Define which columns to exclude (e.g., first column)
-          id_columns <- 1
-          # Remove ID columns from the DataTable
-          data_temp <- data_temp[, -id_columns, with = FALSE]
-        }
+      data_temp <- matrix_utils$process_matrix_file(input$fileQ, input, session, separator)
 
-        # Validate the dimensions of the Q matrix
-        observeEvent(input$fileQ, {
-          num_cols_in_q_matrix <- ncol(data_temp)
-          num_rows_in_q_matrix <- nrow(data_temp)
-          num_attributes <- data$numAttributes
-          num_items_for_single_time <- data$numTimeSinglePoint
-          data$num_rows_in_q_matrix <- nrow(data_temp)
+      if (!is.null(data_temp)) {
+        num_cols_in_q_matrix <- ncol(data_temp)
+        num_rows_in_q_matrix <- nrow(data_temp)
+        data$num_rows_in_q_matrix <- num_rows_in_q_matrix
 
-          error_message <- validation$validate_matrix_dimensions(
-            num_rows_in_q_matrix,
-            num_cols_in_q_matrix,
-            num_items_for_single_time,
-            num_attributes
-          )
+        error_message <- validation$validate_matrix_dimensions(
+          num_rows_in_q_matrix,
+          num_cols_in_q_matrix,
+          data$numTimeSinglePoint,
+          data$numAttributes
+        )
 
-          is_valid <- validation$render_validation_ui(output, session, error_message)
-          if (is_valid) {
-            data$q_matrix <<- data_temp
-          }
-        })
+        is_valid <- validation$render_validation_ui(output, session, error_message)
 
-
-        # Display file preview using DT
-        output$filePreviewQ <- renderDT({
-          datatable(data_temp,
-            options = list(
-              searching = FALSE,
-              initComplete = JS(table_helper$format_pagination())
+        if (is_valid) {
+          data$q_matrix <- data_temp
+          output$filePreviewQ <- renderDT({
+            datatable(data_temp,
+              options = list(
+                searching = FALSE,
+                initComplete = JS(table_helper$format_pagination())
+              )
             )
-          )
-        })
-
-        # Save the modified data to q_matrix
-        data$q_matrix <<- data_temp
-      } else {
-        # Clear the preview if no file is selected
-        output$filePreviewQ <- renderDT(NULL)
+          })
+        } else {
+          data$q_matrix <- NULL
+        }
       }
     })
+
     observe({
       db_name <- Sys.getenv("DB_NAME")
       prefix <- "app-q_matrix-"

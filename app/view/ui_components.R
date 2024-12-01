@@ -249,8 +249,8 @@ results_navigation <- function(id, current_tab) {
             "align-items: center;",
             "gap: 0.5rem;",
             "padding: 0.75rem 1.25rem;",
-            "color:", if (is_active) "#007bff" else "#6c757d",
-            "border-bottom:", if (is_active) "2px solid #007bff" else "none",
+            "color:", if (is_active) "#007bff" else "#6c757d", ";",
+            "border-bottom:", if (is_active) "2px solid #007bff" else "none", ";",
             "text-decoration: none;"
           ),
 
