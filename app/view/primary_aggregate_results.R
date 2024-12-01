@@ -30,6 +30,7 @@ box::use(
     div,
     tags,
     a,
+    req
   ],
   shinybusy[
     show_modal_spinner,
@@ -166,14 +167,14 @@ server <- function(id, data, input, output) {
         )
 
         growth_result <- reactive({
-          vals <- computed_values() # Correctly access the computed values here
+          vals <- computed_values()
           tdcm$growth(
             data$q_matrix,
             data$ir_matrix,
-            vals$time_pts, # Use the values from 'vals' here
-            vals$attribute_names, # Use the values from 'vals' here
-            vals$invariance, # Use the values from 'vals' here
-            vals$rule # Use the values from 'vals' here
+            vals$time_pts,
+            vals$attribute_names,
+            vals$invariance,
+            vals$rule
           )
         })
 
@@ -207,33 +208,33 @@ server <- function(id, data, input, output) {
 
         # Render Line Plot
         line_plot_result <- reactive({
-          vals <- computed_values() # Correctly access the computed values here
-          tdcm$visualize(
+          req(computed_values())
+          vals <- computed_values()
+
+          tdcm$visualize_line(
             data$q_matrix,
             data$ir_matrix,
             vals$time_pts,
             vals$attribute_names,
             vals$invariance,
-            vals$rule,
-            type = "line"
+            vals$rule
           )
         })
 
         # Render Line Plot
         line_plot_result2 <- reactive({
-          vals <- computed_values() # Correctly access the computed values here
-          tdcm$visualize(
+          vals <- computed_values()
+          tdcm$visualize_line(
             data$q_matrix,
             data$ir_matrix,
             vals$time_pts,
             vals$attribute_names,
             vals$invariance,
             vals$rule,
-            type = "line"
           )
         })
         output$tdcmLinePlot <- renderPlot({
-          line_plot_result() # Call the reactive
+          line_plot_result()
         })
 
         # Download Button
@@ -248,34 +249,34 @@ server <- function(id, data, input, output) {
 
         # Render Bar Plot
         bar_plot_result <- reactive({
-          vals <- computed_values() # Correctly access the computed values here
-          tdcm$visualize(
+          req(computed_values())
+          vals <- computed_values()
+          
+          tdcm$visualize_bar(
             data$q_matrix,
             data$ir_matrix,
             vals$time_pts,
             vals$attribute_names,
             vals$invariance,
-            vals$rule,
-            type = "bar"
+            vals$rule
           )
         })
 
         # Render Bar Plot
         bar_plot_result2 <- reactive({
           vals <- computed_values()
-          tdcm$visualize(
+          tdcm$visualize_bar(
             data$q_matrix,
             data$ir_matrix,
             vals$time_pts,
             vals$attribute_names,
             vals$invariance,
             vals$rule,
-            type = "bar"
           )
         })
 
         output$tdcmBarPlot <- renderPlot({
-          bar_plot_result() # Call the reactive
+          bar_plot_result()
         })
 
         # Download Button
@@ -289,7 +290,7 @@ server <- function(id, data, input, output) {
         )
 
         trans_prob_output_result <- reactive({
-          vals <- computed_values() # Correctly access the computed values here
+          vals <- computed_values()
           tdcm$trans_prob(
             data$q_matrix,
             data$ir_matrix,

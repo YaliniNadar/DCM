@@ -18,6 +18,12 @@ box::use(
   data.table[
     as.data.table,
     data.table
+  ],
+  graphics[
+    plot,
+    points,
+    arrows,
+    barplot
   ]
 )
 
@@ -203,4 +209,141 @@ reliability <- function(q_matrix, ir_matrix, time_pts, attribute_names, invarian
   results <- fit_and_summarize(q_matrix, ir_matrix, time_pts, attribute_names, invariance, rule)
   rel <- convert_to_datatable(results$reliability)
   return(rel)
+}
+
+#' Helper function to extract data from array
+extract_growth_data <- function(growth_array) {
+  # Check dimensions
+  if (!is.array(growth_array) || length(dim(growth_array)) != 2) {
+    warning("Expected 2D array for growth data")
+    return(NULL)
+  }
+
+  # Extract dimensions
+  n_timepoints <- dim(growth_array)[1]
+  n_measures <- dim(growth_array)[2]
+
+  # Create data frame
+  data.frame(
+    Time = seq_len(n_timepoints),
+    Mean = growth_array[, 2],
+    SE = growth_array[, 3]
+  )
+}
+
+#' @export
+visualize_line <- function(q_matrix, ir_matrix, time_pts, attribute_names, invariance, rule) {
+  message("Visualize line called with: ",
+          "time_pts=", time_pts,
+          " attr_names=", paste(attribute_names, collapse = ","))
+
+  if (!is.null(q_matrix) && !is.null(ir_matrix) &&
+        !is.null(time_pts) && !is.null(attribute_names)) {
+
+    results <- fit_and_summarize(q_matrix, ir_matrix, time_pts, attribute_names, invariance, rule)
+
+    if (!is.null(results) && !is.null(results$growth)) {
+      # Debug results structure
+      message("Results growth structure: ", class(results$growth))
+      message("Growth dim: ", paste(dim(results$growth), collapse = ","))
+
+      # Handle different data types
+      growth_df <- try({
+        if (is.data.frame(results$growth)) {
+          results$growth
+        } else if (inherits(results$growth, "array") || is.matrix(results$growth)) {
+          extract_growth_data(results$growth)
+        } else {
+          warning("Unsupported growth data type")
+          return(NULL)
+        }
+      })
+
+      if (inherits(growth_df, "try-error") || is.null(growth_df)) {
+        warning("Error converting growth data")
+        return(NULL)
+      }
+
+      # Create plot
+      graphics::plot(growth_df$Time,
+                     growth_df$Mean,
+                     type = "b",
+                     ylim = c(0, 1),
+                     xlab = "Time Point",
+                     ylab = "Probability",
+                     main = "Growth Trajectories")
+
+      if (!all(is.na(growth_df$SE))) {
+        graphics::arrows(growth_df$Time,
+                         growth_df$Mean - growth_df$SE,
+                         growth_df$Time,
+                         growth_df$Mean + growth_df$SE,
+                         code = 3,
+                         angle = 90,
+                         length = 0.05)
+      }
+
+      return(invisible())
+    }
+  }
+  warning("Invalid input parameters")
+  return(NULL)
+}
+
+#' @export
+visualize_bar <- function(q_matrix, ir_matrix, time_pts, attribute_names, invariance, rule) {
+  message("Visualize bar called with: ",
+          "time_pts=", time_pts,
+          " attr_names=", paste(attribute_names, collapse = ","))
+
+  if (!is.null(q_matrix) && !is.null(ir_matrix) &&
+        !is.null(time_pts) && !is.null(attribute_names)) {
+
+    results <- fit_and_summarize(q_matrix, ir_matrix, time_pts, attribute_names, invariance, rule)
+
+    if (!is.null(results) && !is.null(results$growth)) {
+      # Debug results structure
+      message("Results growth structure: ", class(results$growth))
+      message("Growth dim: ", paste(dim(results$growth), collapse = ","))
+
+      # Handle different data types
+      growth_df <- try({
+        if (is.data.frame(results$growth)) {
+          results$growth
+        } else if (inherits(results$growth, "array") || is.matrix(results$growth)) {
+          extract_growth_data(results$growth)
+        } else {
+          warning("Unsupported growth data type")
+          return(NULL)
+        }
+      })
+
+      if (inherits(growth_df, "try-error") || is.null(growth_df)) {
+        warning("Error converting growth data")
+        return(NULL)
+      }
+
+      # Create plot
+      bp <- graphics::barplot(growth_df$Mean,
+                              ylim = c(0, max(growth_df$Mean + growth_df$SE, na.rm = TRUE)),
+                              names.arg = growth_df$Time,
+                              xlab = "Time Point",
+                              ylab = "Probability",
+                              main = "Growth by Time Point")
+
+      if (!all(is.na(growth_df$SE))) {
+        graphics::arrows(bp,
+                         growth_df$Mean - growth_df$SE,
+                         bp,
+                         growth_df$Mean + growth_df$SE,
+                         code = 3,
+                         angle = 90,
+                         length = 0.05)
+      }
+
+      return(invisible())
+    }
+  }
+  warning("Invalid input parameters")
+  return(NULL)
 }
